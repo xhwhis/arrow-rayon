@@ -1,8 +1,7 @@
 use std::any::Any;
-use std::borrow::Borrow;
 use std::sync::Arc;
 
-use arrow_array::{Array, ArrayRef, BooleanArray};
+use arrow_array::{Array, ArrayRef, ArrowPrimitiveType, NativeAdapter, PrimitiveArray};
 use arrow_buffer::NullBuffer;
 use arrow_data::ArrayData;
 use arrow_schema::DataType;
@@ -12,28 +11,34 @@ use rayon::iter::{
     ParallelIterator,
 };
 
-#[derive(Debug, Clone)]
-pub struct ParallelBooleanArray {
-    inner: BooleanArray,
+#[derive(Clone)]
+pub struct ParallelPrimitiveArray<T: ArrowPrimitiveType> {
+    inner: PrimitiveArray<T>,
 }
 
-impl ParallelBooleanArray {
-    fn new(inner: BooleanArray) -> Self {
+impl<T: ArrowPrimitiveType> ParallelPrimitiveArray<T> {
+    fn new(inner: PrimitiveArray<T>) -> Self {
         Self { inner }
     }
 
-    pub fn into_inner(self) -> BooleanArray {
+    pub fn into_inner(self) -> PrimitiveArray<T> {
         self.inner
     }
 }
 
-impl From<BooleanArray> for ParallelBooleanArray {
-    fn from(array: BooleanArray) -> Self {
+impl<T: ArrowPrimitiveType> From<PrimitiveArray<T>> for ParallelPrimitiveArray<T> {
+    fn from(array: PrimitiveArray<T>) -> Self {
         Self::new(array)
     }
 }
 
-impl Array for ParallelBooleanArray {
+impl<T: ArrowPrimitiveType> std::fmt::Debug for ParallelPrimitiveArray<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+impl<T: ArrowPrimitiveType> Array for ParallelPrimitiveArray<T> {
     fn as_any(&self) -> &dyn Any {
         self.inner.as_any()
     }
@@ -79,28 +84,28 @@ impl Array for ParallelBooleanArray {
     }
 }
 
-impl IntoParallelIterator for ParallelBooleanArray {
-    type Item = Option<bool>;
-    type Iter = ParallelBooleanArrayIter;
+impl<T: ArrowPrimitiveType> IntoParallelIterator for ParallelPrimitiveArray<T> {
+    type Item = Option<T::Native>;
+    type Iter = ParallelPrimitiveArrayIter<T>;
 
     fn into_par_iter(self) -> Self::Iter {
-        ParallelBooleanArrayIter::new(self.inner)
+        ParallelPrimitiveArrayIter::new(self.inner)
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct ParallelBooleanArrayIter {
-    inner: BooleanArray,
+pub struct ParallelPrimitiveArrayIter<T: ArrowPrimitiveType> {
+    inner: PrimitiveArray<T>,
 }
 
-impl ParallelBooleanArrayIter {
-    fn new(inner: BooleanArray) -> Self {
+impl<T: ArrowPrimitiveType> ParallelPrimitiveArrayIter<T> {
+    fn new(inner: PrimitiveArray<T>) -> Self {
         Self { inner }
     }
 }
 
-impl ParallelIterator for ParallelBooleanArrayIter {
-    type Item = Option<bool>;
+impl<T: ArrowPrimitiveType> ParallelIterator for ParallelPrimitiveArrayIter<T> {
+    type Item = Option<T::Native>;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
     where
@@ -114,7 +119,7 @@ impl ParallelIterator for ParallelBooleanArrayIter {
     }
 }
 
-impl IndexedParallelIterator for ParallelBooleanArrayIter {
+impl<T: ArrowPrimitiveType> IndexedParallelIterator for ParallelPrimitiveArrayIter<T> {
     fn len(&self) -> usize {
         self.inner.len()
     }
@@ -146,7 +151,9 @@ impl IndexedParallelIterator for ParallelBooleanArrayIter {
     }
 }
 
-impl<Ptr: Borrow<Option<bool>> + Send> FromParallelIterator<Ptr> for ParallelBooleanArray {
+impl<T: ArrowPrimitiveType, Ptr: Into<NativeAdapter<T>> + Send> FromParallelIterator<Ptr>
+    for ParallelPrimitiveArray<T>
+{
     fn from_par_iter<I>(par_iter: I) -> Self
     where
         I: IntoParallelIterator<Item = Ptr>,
@@ -155,43 +162,31 @@ impl<Ptr: Borrow<Option<bool>> + Send> FromParallelIterator<Ptr> for ParallelBoo
         let vec = Vec::<Ptr>::from_par_iter(par_iter);
         let iter = vec.into_iter();
 
-        Self::new(BooleanArray::from_iter(iter))
-    }
-}
-
-pub trait BooleanArrayIntoParallelIterator {
-    type Iter: IntoParallelIterator<Item = Option<bool>>;
-
-    fn into_par_iter(self) -> Self::Iter;
-}
-
-impl BooleanArrayIntoParallelIterator for BooleanArray {
-    type Iter = ParallelBooleanArray;
-
-    fn into_par_iter(self) -> Self::Iter {
-        ParallelBooleanArray::new(self)
+        Self::new(PrimitiveArray::from_iter(iter))
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct ParallelBooleanArrayRef<'data> {
-    inner: &'data BooleanArray,
+pub struct ParallelPrimitiveArrayRef<'data, T: ArrowPrimitiveType> {
+    inner: &'data PrimitiveArray<T>,
 }
 
-impl<'data> ParallelBooleanArrayRef<'data> {
-    fn new(inner: &'data BooleanArray) -> Self {
+impl<'data, T: ArrowPrimitiveType> ParallelPrimitiveArrayRef<'data, T> {
+    pub fn new(inner: &'data PrimitiveArray<T>) -> Self {
         Self { inner }
     }
 }
 
-impl<'data> From<&'data BooleanArray> for ParallelBooleanArrayRef<'data> {
-    fn from(array: &'data BooleanArray) -> Self {
+impl<'data, T: ArrowPrimitiveType> From<&'data PrimitiveArray<T>>
+    for ParallelPrimitiveArrayRef<'data, T>
+{
+    fn from(array: &'data PrimitiveArray<T>) -> Self {
         Self::new(array)
     }
 }
 
-impl ParallelIterator for ParallelBooleanArrayRef<'_> {
-    type Item = Option<bool>;
+impl<T: ArrowPrimitiveType> ParallelIterator for ParallelPrimitiveArrayRef<'_, T> {
+    type Item = Option<T::Native>;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
     where
@@ -205,7 +200,7 @@ impl ParallelIterator for ParallelBooleanArrayRef<'_> {
     }
 }
 
-impl IndexedParallelIterator for ParallelBooleanArrayRef<'_> {
+impl<T: ArrowPrimitiveType> IndexedParallelIterator for ParallelPrimitiveArrayRef<'_, T> {
     fn len(&self) -> usize {
         self.inner.len()
     }
@@ -237,53 +232,29 @@ impl IndexedParallelIterator for ParallelBooleanArrayRef<'_> {
     }
 }
 
-impl<'data> IntoParallelRefIterator<'data> for ParallelBooleanArrayRef<'data> {
-    type Item = Option<bool>;
-    type Iter = ParallelBooleanArrayRef<'data>;
+impl<'data, T: ArrowPrimitiveType> IntoParallelRefIterator<'data>
+    for ParallelPrimitiveArrayRef<'data, T>
+{
+    type Item = Option<T::Native>;
+    type Iter = ParallelPrimitiveArrayRef<'data, T>;
 
     fn par_iter(&'data self) -> Self::Iter {
-        ParallelBooleanArrayRef::new(self.inner)
+        ParallelPrimitiveArrayRef::new(self.inner)
     }
 }
 
-pub trait BooleanArrayRefParallelIterator<'data> {
-    type Iter: ParallelIterator<Item = Option<bool>>;
+pub trait PrimitiveArrayRefParallelIterator<'data, T: ArrowPrimitiveType> {
+    type Iter: ParallelIterator<Item = Option<T::Native>>;
 
     fn par_iter(&'data self) -> Self::Iter;
 }
 
-impl<'data> BooleanArrayRefParallelIterator<'data> for BooleanArray {
-    type Iter = ParallelBooleanArrayRef<'data>;
+impl<'data, T: ArrowPrimitiveType> PrimitiveArrayRefParallelIterator<'data, T>
+    for PrimitiveArray<T>
+{
+    type Iter = ParallelPrimitiveArrayRef<'data, T>;
 
     fn par_iter(&'data self) -> Self::Iter {
-        ParallelBooleanArrayRef::new(self)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_par_iter() {
-        let array = BooleanArray::from(vec![Some(true), None, Some(false)]);
-        let items: Vec<bool> = array
-            .par_iter()
-            .map(|item| item.map_or(true, |item| !item))
-            .collect();
-        assert_eq!(items, vec![false, true, true]);
-    }
-
-    #[test]
-    fn test_collect_array() {
-        let array = BooleanArray::from(vec![Some(true), None, Some(false)]);
-        let collected_array: ParallelBooleanArray = array
-            .par_iter()
-            .map(|item| item.map(|item| !item))
-            .collect();
-        let boolean_array = collected_array.into_inner();
-        assert!(!boolean_array.value(0));
-        assert!(boolean_array.is_null(1));
-        assert!(boolean_array.value(2));
+        ParallelPrimitiveArrayRef::new(self)
     }
 }
