@@ -2,7 +2,7 @@ use arrow_array::types::GenericStringType;
 use arrow_array::{LargeStringArray, StringArray};
 use rayon::iter::ParallelIterator;
 
-use super::byte_array::{ParallelGenericByteArray, ParallelGenericByteArrayRef};
+use crate::parallel_byte_array::{ParallelGenericByteArray, ParallelGenericByteArrayRef};
 
 pub type ParallelGenericStringArray<OffsetSize> =
     ParallelGenericByteArray<GenericStringType<OffsetSize>>;

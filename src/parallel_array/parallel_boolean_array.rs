@@ -18,7 +18,7 @@ pub struct ParallelBooleanArray {
 }
 
 impl ParallelBooleanArray {
-    fn new(inner: BooleanArray) -> Self {
+    pub fn new(inner: BooleanArray) -> Self {
         Self { inner }
     }
 
@@ -179,7 +179,7 @@ pub struct ParallelBooleanArrayRef<'data> {
 }
 
 impl<'data> ParallelBooleanArrayRef<'data> {
-    fn new(inner: &'data BooleanArray) -> Self {
+    pub fn new(inner: &'data BooleanArray) -> Self {
         Self { inner }
     }
 }

@@ -2,7 +2,7 @@ use arrow_array::types::GenericBinaryType;
 use arrow_array::{BinaryArray, LargeBinaryArray};
 use rayon::iter::ParallelIterator;
 
-use super::byte_array::{ParallelGenericByteArray, ParallelGenericByteArrayRef};
+use crate::parallel_byte_array::{ParallelGenericByteArray, ParallelGenericByteArrayRef};
 
 pub type ParallelGenericBinaryArray<OffsetSize> =
     ParallelGenericByteArray<GenericBinaryType<OffsetSize>>;

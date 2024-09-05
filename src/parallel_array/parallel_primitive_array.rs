@@ -17,7 +17,7 @@ pub struct ParallelPrimitiveArray<T: ArrowPrimitiveType> {
 }
 
 impl<T: ArrowPrimitiveType> ParallelPrimitiveArray<T> {
-    fn new(inner: PrimitiveArray<T>) -> Self {
+    pub fn new(inner: PrimitiveArray<T>) -> Self {
         Self { inner }
     }
 

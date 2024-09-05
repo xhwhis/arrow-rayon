@@ -18,7 +18,7 @@ pub struct ParallelGenericByteArray<T: ByteArrayType> {
 }
 
 impl<T: ByteArrayType> ParallelGenericByteArray<T> {
-    fn new(inner: GenericByteArray<T>) -> Self {
+    pub fn new(inner: GenericByteArray<T>) -> Self {
         Self { inner }
     }
 

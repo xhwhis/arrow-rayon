@@ -1,1 +1,3 @@
-pub mod parallel_array;
+mod parallel_array;
+
+pub use parallel_array::*;

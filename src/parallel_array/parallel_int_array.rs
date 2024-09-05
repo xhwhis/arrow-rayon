@@ -1,8 +1,8 @@
 use arrow_array::types::{Int16Type, Int32Type, Int64Type, Int8Type};
-use arrow_array::Int8Array;
+use arrow_array::{Int16Array, Int32Array, Int64Array, Int8Array};
 use rayon::iter::ParallelIterator;
 
-use super::primitive_array::{ParallelPrimitiveArray, ParallelPrimitiveArrayRef};
+use crate::parallel_primitive_array::{ParallelPrimitiveArray, ParallelPrimitiveArrayRef};
 
 pub type ParallelInt8Array = ParallelPrimitiveArray<Int8Type>;
 pub type ParallelInt8ArrayRef<'data> = ParallelPrimitiveArrayRef<'data, Int8Type>;
@@ -24,6 +24,48 @@ impl<'data> Int8ArrayRefParallelIterator<'data> for Int8Array {
 
     fn par_iter(&'data self) -> Self::Iter {
         ParallelInt8ArrayRef::new(self)
+    }
+}
+
+pub trait Int16ArrayRefParallelIterator<'data> {
+    type Iter: ParallelIterator<Item = Option<i16>>;
+
+    fn par_iter(&'data self) -> Self::Iter;
+}
+
+impl<'data> Int16ArrayRefParallelIterator<'data> for Int16Array {
+    type Iter = ParallelInt16ArrayRef<'data>;
+
+    fn par_iter(&'data self) -> Self::Iter {
+        ParallelInt16ArrayRef::new(self)
+    }
+}
+
+pub trait Int32ArrayRefParallelIterator<'data> {
+    type Iter: ParallelIterator<Item = Option<i32>>;
+
+    fn par_iter(&'data self) -> Self::Iter;
+}
+
+impl<'data> Int32ArrayRefParallelIterator<'data> for Int32Array {
+    type Iter = ParallelInt32ArrayRef<'data>;
+
+    fn par_iter(&'data self) -> Self::Iter {
+        ParallelInt32ArrayRef::new(self)
+    }
+}
+
+pub trait Int64ArrayRefParallelIterator<'data> {
+    type Iter: ParallelIterator<Item = Option<i64>>;
+
+    fn par_iter(&'data self) -> Self::Iter;
+}
+
+impl<'data> Int64ArrayRefParallelIterator<'data> for Int64Array {
+    type Iter = ParallelInt64ArrayRef<'data>;
+
+    fn par_iter(&'data self) -> Self::Iter {
+        ParallelInt64ArrayRef::new(self)
     }
 }
 
