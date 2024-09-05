@@ -1,11 +1,13 @@
 [package]
 name = "arrow-rayon"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 authors = ["xhwhis <hi@whis.me>"]
 description = "Use parallel iterators for Apache Arrow with rayon"
-homepage = "https://github/xhwhis/arrow-rayon"
-repository = "https://github/xhwhis/arrow-rayon"
+keywords = ["arrow", "concurrency", "parallel"]
+categories = ["concurrency"]
+documentation = "https://docs.rs/arrow-rayon"
+repository = "https://github.com/xhwhis/arrow-rayon"
 license = "Unlicense"
 
 [dependencies]
