@@ -85,18 +85,18 @@ impl<T: ByteArrayType> Array for ParallelGenericByteArray<T> {
     }
 }
 
-impl<T: ByteArrayType, Ptr: AsRef<T::Native> + Send> FromParallelIterator<Ptr>
+impl<T: ByteArrayType, Ptr: AsRef<T::Native> + Send> FromParallelIterator<Option<Ptr>>
     for ParallelGenericByteArray<T>
 {
     fn from_par_iter<I>(par_iter: I) -> Self
     where
-        I: IntoParallelIterator<Item = Ptr>,
+        I: IntoParallelIterator<Item = Option<Ptr>>,
     {
         // HACK
-        let vec = Vec::<Ptr>::from_par_iter(par_iter);
+        let vec = Vec::<Option<Ptr>>::from_par_iter(par_iter);
         let iter = vec.into_iter();
 
-        Self::new(GenericByteArray::from_iter_values(iter))
+        Self::new(GenericByteArray::from_iter(iter))
     }
 }
 

@@ -44,6 +44,8 @@ impl<'data> LargeBinaryArrayRefParallelIterator<'data> for LargeBinaryArray {
 
 #[cfg(test)]
 mod tests {
+    use arrow_array::Array;
+
     use super::*;
 
     #[test]
@@ -75,12 +77,12 @@ mod tests {
             BinaryArray::from_opt_vec(vec![Some(b"one"), None, Some(b"two"), Some(b"three")]);
         let collected_array: ParallelBinaryArray = array
             .par_iter()
-            .map(|item| item.map_or_else(Vec::new, |item| item.to_vec()))
+            .map(|item| item.map(|item| item.to_ascii_uppercase()))
             .collect();
         let binary_array = collected_array.into_inner();
-        assert_eq!(binary_array.value(0), b"one");
-        assert_eq!(binary_array.value(1), b"");
-        assert_eq!(binary_array.value(2), b"two");
-        assert_eq!(binary_array.value(3), b"three");
+        assert_eq!(binary_array.value(0), b"ONE");
+        assert!(binary_array.is_null(1));
+        assert_eq!(binary_array.value(2), b"TWO");
+        assert_eq!(binary_array.value(3), b"THREE");
     }
 }

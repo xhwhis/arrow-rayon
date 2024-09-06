@@ -44,6 +44,8 @@ impl<'data> LargeStringArrayRefParallelIterator<'data> for LargeStringArray {
 
 #[cfg(test)]
 mod tests {
+    use arrow_array::Array;
+
     use super::*;
 
     #[test]
@@ -69,11 +71,11 @@ mod tests {
         let array = StringArray::from(vec![Some("one"), None, Some("two"), Some("three")]);
         let collected_array: ParallelStringArray = array
             .par_iter()
-            .map(|item| item.map_or_else(String::new, |item| item.to_uppercase()))
+            .map(|item| item.map(|item| item.to_uppercase()))
             .collect();
         let string_array = collected_array.into_inner();
         assert_eq!(string_array.value(0), "ONE");
-        assert_eq!(string_array.value(1), "");
+        assert!(string_array.is_null(1));
         assert_eq!(string_array.value(2), "TWO");
         assert_eq!(string_array.value(3), "THREE");
     }
