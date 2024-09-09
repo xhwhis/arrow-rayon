@@ -18,12 +18,20 @@ arrow-schema = "52.2.0"
 half = "2.4.1"
 rayon = "1.10.0"
 
+[dev-dependencies]
+criterion = "0.5.1"
+geos = "9.0.0"
+rand = "0.8.5"
+
+[[bench]]
+name = "bench"
+harness = false
+
 [lints.rust]
 macro_use_extern_crate = "warn"
 single_use_lifetimes = "warn"
 trivial_casts = "warn"
 trivial_numeric_casts = "warn"
-unused_crate_dependencies = "warn"
 unused_extern_crates = "warn"
 unused_import_braces = "warn"
 unused_lifetimes = "warn"
