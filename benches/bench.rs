@@ -1,5 +1,6 @@
 use arrow_array::BinaryArray;
 use arrow_rayon::parallel_binary_array::BinaryArrayRefParallelIterator;
+use arrow_rayon::parallel_float_array::ParallelFloat64Array;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use geos::Geom;
 use rand::{thread_rng, Rng};
@@ -23,14 +24,16 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         c.bench_function(&format!("wkb array value distance(len = {len})"), |b| {
             b.iter(|| {
-                wkb_arr1
+                let res: ParallelFloat64Array = wkb_arr1
                     .par_iter()
                     .zip(wkb_arr2.par_iter())
-                    .for_each(|(wkb1, wkb2)| {
+                    .map(|(wkb1, wkb2)| {
                         let geom1 = geos::Geometry::new_from_wkb(wkb1.unwrap()).unwrap();
                         let geom2 = geos::Geometry::new_from_wkb(wkb2.unwrap()).unwrap();
-                        black_box(geom1.distance(&geom2).unwrap());
-                    });
+                        geom1.distance(&geom2).ok()
+                    })
+                    .collect();
+                black_box(res);
             });
         });
     }

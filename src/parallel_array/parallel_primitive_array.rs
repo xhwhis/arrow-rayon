@@ -158,11 +158,8 @@ impl<T: ArrowPrimitiveType, Ptr: Into<NativeAdapter<T>> + Send> FromParallelIter
     where
         I: IntoParallelIterator<Item = Ptr>,
     {
-        // HACK
-        let vec = Vec::<Ptr>::from_par_iter(par_iter);
-        let iter = vec.into_iter();
-
-        Self::new(PrimitiveArray::from_iter(iter))
+        let vec = Vec::from_par_iter(par_iter);
+        Self::new(PrimitiveArray::from_iter(vec))
     }
 }
 

@@ -93,10 +93,8 @@ impl<T: ByteArrayType, Ptr: AsRef<T::Native> + Send> FromParallelIterator<Option
         I: IntoParallelIterator<Item = Option<Ptr>>,
     {
         // HACK
-        let vec = Vec::<Option<Ptr>>::from_par_iter(par_iter);
-        let iter = vec.into_iter();
-
-        Self::new(GenericByteArray::from_iter(iter))
+        let vec = Vec::from_par_iter(par_iter);
+        Self::new(GenericByteArray::from_iter(vec))
     }
 }
 
